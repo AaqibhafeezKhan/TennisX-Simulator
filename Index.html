@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tennis Ball</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #87CEEB; /* Sky Blue */
+      margin: 0;
+    }
+
+    .tennis-ball {
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, #8FB899 40%, #5C9E60 80%, #2B580C 100%); /* Gradient for a more textured look */
+      border-radius: 50%;
+      position: relative;
+      border: 8px solid #0B6623; /* Tennis Ball Seam Color */
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); /* Shadow for depth */
+      animation: bounce 2s ease-in-out infinite alternate; /* Bouncing animation */
+    }
+
+    .shine {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: rgba(255, 255, 255, 0.8); /* White shine effect */
+      border-radius: 50%;
+      top: 20px;
+      left: 20px;
+    }
+
+    @keyframes bounce {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="tennis-ball">
+    <div class="shine"></div>
+  </div>
+</body>
+</html>
