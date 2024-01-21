@@ -1,0 +1,53 @@
+/* Tennis Court */
+.tennis-court {
+  position: relative;
+  width: 600px;
+  height: 300px;
+  background-color: #2ecc71;
+  border: 5px solid #3498db;
+}
+
+/* Tennis Net */
+.tennis-net {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  background-color: #ecf0f1;
+}
+
+/* Tennis Ball */
+.tennis-ball {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: #e74c3c;
+  border-radius: 50%;
+  animation: bounce 1s infinite alternate;
+}
+
+@keyframes bounce {
+  0% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  100% {
+    transform: translate(-50%, -50%) translateY(-100px);
+  }
+}
+
+/* Tennis Racket */
+.tennis-racket {
+  position: absolute;
+  top: 60%;
+  left: 10%;
+  width: 10px;
+  height: 120px;
+  background-color: #f39c12;
+  transform-origin: bottom;
+  transform: rotate(-45deg);
+}
