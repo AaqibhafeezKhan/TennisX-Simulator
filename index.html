@@ -107,7 +107,6 @@
     </div>
 
     <script>
-    // ─── helpers exposed to Python via window ──────────────────────────────────
     window._pyo_animateBall = function(el, durationMs) {
         el.animate(
             [{transform:'scale(1)'},{transform:'scale(1.5)',offset:0.5},{transform:'scale(1)'}],
@@ -115,12 +114,10 @@
         );
     };
 
-    // Speed slider — plain JS, no Python needed
     document.getElementById('match-speed').addEventListener('input', function() {
         document.getElementById('speed-label').textContent = this.value + 'ms';
     });
 
-    // ─── All Python lives here ────────────────────────────────────────────────
     const PYTHON_CODE = `
 import random
 import asyncio
@@ -128,7 +125,6 @@ import json
 from js import document, localStorage, console, window
 from pyodide.ffi import create_proxy
 
-# ── Engine ────────────────────────────────────────────────
 class Player:
     def __init__(self, name, power=80, agility=80, stamina=80):
         self.name = name
@@ -240,7 +236,6 @@ class TennisMatch:
             "p1_serving": self.serving is p1,
         }
 
-# ── UI helpers ────────────────────────────────────────────
 COMMENTS = {
     "winner": [
         "{name} fires a clean winner!",
@@ -295,7 +290,6 @@ def save_history(history_el, winner, score):
         _render_hist(history_el, entry)
     except: pass
 
-# ── Match loop ────────────────────────────────────────────
 match = None
 
 async def start_match():
@@ -338,7 +332,6 @@ async def start_match():
         for hit in point["rally"]:
             hitter_name = str(hit["hitter"])
             to_side = 2 if hitter_name == match.p1.name else 1
-            # Move ball
             ball_el.style.transition = f"left {t}s linear, top {t}s linear"
             top_pct = random.randint(20, 80)
             if to_side == 1:
@@ -386,7 +379,6 @@ async def start_match():
     commentary(feed, f"🏆 {match.winner.name} wins the match!", "winner")
     save_history(hist, match.winner.name, f"{match.p1.sets}-{match.p2.sets}")
 
-# ── Slider live readout ────────────────────────────────────
 def _update_val(e):
     eid = str(e.target.id)
     val = str(e.target.value)
@@ -401,18 +393,13 @@ for i in range(int(sliders.length)):
     if "-power" in sid or "-agility" in sid or "-stamina" in sid:
         s.addEventListener("input", _slider_proxy)
 
-# ── Load history
 load_history(document.getElementById("match-history"))
 `;
 
-    // ─── Boot Pyodide ──────────────────────────────────────────────────────────
     async function boot() {
         const msg = document.getElementById('loader-msg');
         const sub = document.getElementById('loader-sub');
-
         msg.textContent = 'Downloading Python Runtime...';
-
-        // Dynamically load Pyodide script
         await new Promise((resolve, reject) => {
             const s = document.createElement('script');
             s.src = 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js';
@@ -420,20 +407,14 @@ load_history(document.getElementById("match-history"))
             s.onerror = reject;
             document.head.appendChild(s);
         });
-
         msg.textContent = 'Starting Python...';
         sub.textContent = 'Initializing Pyodide runtime';
-
         const pyodide = await loadPyodide({
             indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/'
         });
-
         msg.textContent = 'Loading engine...';
         sub.textContent = 'Running tennis engine';
-
         await pyodide.runPythonAsync(PYTHON_CODE);
-
-        // Wire up start button
         const btn = document.getElementById('start-btn');
         btn.disabled = false;
         btn.innerHTML = '<span class="btn-icon">⚡</span> START BATTLE';
@@ -450,8 +431,6 @@ load_history(document.getElementById("match-history"))
                 btn.innerHTML = '<span class="btn-icon">⚡</span> START BATTLE';
             }
         });
-
-        // Hide loader
         document.getElementById('loader').classList.add('hidden');
     }
 
