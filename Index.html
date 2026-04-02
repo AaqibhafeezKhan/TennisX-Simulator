@@ -1,54 +1,465 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tennis Ball</title>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #87CEEB; /* Sky Blue */
-      margin: 0;
-    }
-
-    .tennis-ball {
-      width: 150px;
-      height: 150px;
-      background: radial-gradient(circle, #8FB899 40%, #5C9E60 80%, #2B580C 100%); /* Gradient for a more textured look */
-      border-radius: 50%;
-      position: relative;
-      border: 8px solid #0B6623; /* Tennis Ball Seam Color */
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); /* Shadow for depth */
-      animation: bounce 2s ease-in-out infinite alternate; /* Bouncing animation */
-    }
-
-    .shine {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      background-color: rgba(255, 255, 255, 0.8); /* White shine effect */
-      border-radius: 50%;
-      top: 20px;
-      left: 20px;
-    }
-
-    @keyframes bounce {
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-20px);
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TennisX | The Python Driven Tennis Simulator</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="tennis-ball">
-    <div class="shine"></div>
-  </div>
+    <div id="loader" class="loader-overlay">
+        <div class="loader-spinner"></div>
+        <p id="loader-msg">Downloading Python Runtime...</p>
+        <small id="loader-sub" style="color:#94a3b8;margin-top:8px;font-size:0.7rem;">This may take 10-30 seconds on first load</small>
+    </div>
+
+    <div class="dashboard">
+        <header>
+            <div class="logo">
+                <span style="color:#fff">TENNIS</span><span class="highlight">X</span>
+            </div>
+            <div class="tagline">Pyodide-based Simulator</div>
+        </header>
+
+        <main>
+            <section class="control-panel glass">
+                <h2>Players Config</h2>
+                <div class="player-inputs">
+                    <div class="player-config-card">
+                        <label>Player 1 (Home)</label>
+                        <input type="text" id="p1-name" value="Novak D.">
+                        <div class="stat-sliders">
+                            <div class="slider-box"><span>PWR</span><input type="range" id="p1-power" min="50" max="99" value="85"><small id="p1-power-val">85</small></div>
+                            <div class="slider-box"><span>AGL</span><input type="range" id="p1-agility" min="50" max="99" value="82"><small id="p1-agility-val">82</small></div>
+                            <div class="slider-box"><span>STM</span><input type="range" id="p1-stamina" min="50" max="99" value="80"><small id="p1-stamina-val">80</small></div>
+                        </div>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="player-config-card">
+                        <label>Player 2 (Guest)</label>
+                        <input type="text" id="p2-name" value="Carlos A.">
+                        <div class="stat-sliders">
+                            <div class="slider-box"><span>PWR</span><input type="range" id="p2-power" min="50" max="99" value="80"><small id="p2-power-val">80</small></div>
+                            <div class="slider-box"><span>AGL</span><input type="range" id="p2-agility" min="50" max="99" value="88"><small id="p2-agility-val">88</small></div>
+                            <div class="slider-box"><span>STM</span><input type="range" id="p2-stamina" min="50" max="99" value="85"><small id="p2-stamina-val">85</small></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Match Speed (ms)</label>
+                    <input type="range" id="match-speed" min="100" max="1000" value="400" step="100">
+                    <div id="speed-label" style="text-align:right;font-size:0.7rem;">400ms</div>
+                </div>
+                <button id="start-btn" class="btn-primary" disabled>
+                    <span class="btn-icon">⏳</span> LOADING PYTHON...
+                </button>
+            </section>
+
+            <section class="arena glass">
+                <div id="special-event" class="event-badge"></div>
+                <div class="scoreboard">
+                    <div class="score-card player-1">
+                        <div class="player-info">
+                            <h3 id="p1-display">Novak D.</h3>
+                            <div class="set-indicator" id="p1-sets">0 Sets</div>
+                            <div class="serving-dot" id="p1-serving"></div>
+                        </div>
+                        <div class="points" id="p1-score">0</div>
+                    </div>
+                    <div class="score-card games">
+                        <div class="game-label">GAMES</div>
+                        <div class="game-score"><span id="p1-games">0</span> : <span id="p2-games">0</span></div>
+                    </div>
+                    <div class="score-card player-2">
+                        <div class="points" id="p2-score">0</div>
+                        <div class="player-info">
+                            <h3 id="p2-display">Carlos A.</h3>
+                            <div class="set-indicator" id="p2-sets">0 Sets</div>
+                            <div class="serving-dot" id="p2-serving"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="court-wrapper">
+                    <div class="court" id="tennis-court">
+                        <div class="net"></div>
+                        <div class="center-service-line"></div>
+                        <div class="tennis-ball" id="ball"></div>
+                        <div class="racket-1" id="racket-1"></div>
+                        <div class="racket-2" id="racket-2"></div>
+                    </div>
+                </div>
+
+                <div class="console-grid">
+                    <div class="commentary-box glass">
+                        <div id="commentary-feed" class="commentary-feed"></div>
+                    </div>
+                    <div class="history-box glass">
+                        <div id="match-history" class="history-list"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+    // ─── helpers exposed to Python via window ──────────────────────────────────
+    window._pyo_animateBall = function(el, durationMs) {
+        el.animate(
+            [{transform:'scale(1)'},{transform:'scale(1.5)',offset:0.5},{transform:'scale(1)'}],
+            {duration: durationMs}
+        );
+    };
+
+    // Speed slider — plain JS, no Python needed
+    document.getElementById('match-speed').addEventListener('input', function() {
+        document.getElementById('speed-label').textContent = this.value + 'ms';
+    });
+
+    // ─── All Python lives here ────────────────────────────────────────────────
+    const PYTHON_CODE = `
+import random
+import asyncio
+import json
+from js import document, localStorage, console, window
+from pyodide.ffi import create_proxy
+
+# ── Engine ────────────────────────────────────────────────
+class Player:
+    def __init__(self, name, power=80, agility=80, stamina=80):
+        self.name = name
+        self.power = power
+        self.agility = agility
+        self.stamina = stamina
+        self.points = 0
+        self.games = 0
+        self.sets = 0
+
+    def get_score_label(self, other_pts):
+        scores = ["0", "15", "30", "40"]
+        if self.points < 3:
+            return scores[self.points]
+        if self.points == other_pts:
+            return "40"
+        return "AD" if self.points > other_pts else "40"
+
+class TennisMatch:
+    def __init__(self, p1_name, p2_name, p1_stats, p2_stats):
+        self.p1 = Player(p1_name, **p1_stats)
+        self.p2 = Player(p2_name, **p2_stats)
+        if p1_name == p2_name:
+            self.p2.name = p2_name + " "
+        self.serving = self.p1
+        self.receiver = self.p2
+        self.winner = None
+
+    def simulate_point(self):
+        rally = []
+        hitter, receiver = self.serving, self.receiver
+        rally.append({"hitter": hitter.name, "type": "serve"})
+        while True:
+            sf = (hitter.stamina / 100) * 0.5 + 0.5
+            success = ((hitter.power + hitter.agility) / 2) * sf
+            roll = random.randint(0, 100) + (receiver.agility / 10)
+            if roll > success:
+                rally.append({"hitter": hitter.name, "type": "error"})
+                receiver.points += 1
+                hitter.stamina = max(10, hitter.stamina - 2)
+                self._check_scoring()
+                return {"rally": rally, "last_hitter": hitter.name, "result": "error"}
+            if random.random() * 100 < (hitter.power / 15) and len(rally) > 2:
+                rally.append({"hitter": hitter.name, "type": "winner"})
+                hitter.points += 1
+                hitter.stamina = max(10, hitter.stamina - 1)
+                self._check_scoring()
+                return {"rally": rally, "last_hitter": hitter.name, "result": "winner"}
+            rally.append({"hitter": hitter.name, "type": "hit"})
+            hitter.stamina = max(10, hitter.stamina - 0.5)
+            hitter, receiver = receiver, hitter
+            if len(rally) > 30:
+                break
+        w = random.choice([self.p1, self.p2])
+        w.points += 1
+        self._check_scoring()
+        return {"rally": rally, "last_hitter": w.name, "result": "winner"}
+
+    def _check_scoring(self):
+        p1, p2 = self.p1, self.p2
+        if p1.games == 6 and p2.games == 6:
+            self._tiebreak(); return
+        if p1.points >= 4 and p1.points - p2.points >= 2:
+            p1.games += 1; self._reset_points(); self._switch()
+        elif p2.points >= 4 and p2.points - p1.points >= 2:
+            p2.games += 1; self._reset_points(); self._switch()
+        if p1.points >= 3 and p2.points >= 3 and p1.points == p2.points and p1.points > 3:
+            p1.points = p2.points = 3
+        if p1.games >= 6 and p1.games - p2.games >= 2:
+            p1.sets += 1; self._reset_games()
+        elif p2.games >= 6 and p2.games - p1.games >= 2:
+            p2.sets += 1; self._reset_games()
+        if p1.sets == 2: self.winner = p1
+        elif p2.sets == 2: self.winner = p2
+
+    def _tiebreak(self):
+        p1, p2 = self.p1, self.p2
+        if p1.points >= 7 and p1.points - p2.points >= 2:
+            p1.sets += 1; p1.games, p2.games = 7, 6; self._reset_points(); self._reset_games()
+        elif p2.points >= 7 and p2.points - p1.points >= 2:
+            p2.sets += 1; p1.games, p2.games = 6, 7; self._reset_points(); self._reset_games()
+
+    def _reset_points(self): self.p1.points = self.p2.points = 0
+    def _reset_games(self): self.p1.games = self.p2.games = 0
+    def _switch(self): self.serving, self.receiver = self.receiver, self.serving
+
+    def status(self):
+        p1, p2 = self.p1, self.p2
+        tb = p1.games == 6 and p2.games == 6
+        ev = None
+        if not self.winner:
+            p1n, p2n = 2 - p1.sets, 2 - p2.sets
+            if (p1.games >= 5 and p1.points >= 3 and p1.points > p2.points and p1n == 1) or \
+               (p2.games >= 5 and p2.points >= 3 and p2.points > p1.points and p2n == 1):
+                ev = "MATCH POINT"
+            elif p1.games >= 5 or p2.games >= 5:
+                if (p1.games >= 5 and p1.points >= 3 and p1.points > p2.points) or \
+                   (p2.games >= 5 and p2.points >= 3 and p2.points > p1.points):
+                    ev = "SET POINT"
+            elif (self.serving is p1 and p2.points >= 3 and p2.points > p1.points) or \
+                 (self.serving is p2 and p1.points >= 3 and p1.points > p2.points):
+                ev = "BREAK POINT"
+        return {
+            "p1_score": str(p1.points) if tb else p1.get_score_label(p2.points),
+            "p2_score": str(p2.points) if tb else p2.get_score_label(p1.points),
+            "p1_games": str(p1.games), "p2_games": str(p2.games),
+            "p1_sets": str(p1.sets), "p2_sets": str(p2.sets),
+            "special_event": ev,
+            "p1_serving": self.serving is p1,
+        }
+
+# ── UI helpers ────────────────────────────────────────────
+COMMENTS = {
+    "winner": [
+        "{name} fires a clean winner!",
+        "WHAT A SHOT! {name} finds the line!",
+        "Unbelievable! {name} takes the point in style.",
+        "Too good! {name} is dominating.",
+    ],
+    "error": [
+        "Tough break — {name} misses.",
+        "Wide! {name} couldn't keep it in.",
+        "Into the net! Unforced error by {name}.",
+        "Pressure mounts. {name} fails to find the court.",
+    ],
+    "BREAK POINT": ["🚨 BREAK POINT!", "Huge moment... BREAK POINT!", "Can they break? BREAK POINT!"],
+    "SET POINT":   ["🏆 SET POINT!", "One point away from the set!",  "High stakes — SET POINT!"],
+    "MATCH POINT": ["👑 MATCH POINT!", "IT'S MATCH POINT!", "CAN THEY CLOSE IT OUT?"],
+}
+
+def commentary(feed_el, text, cls="info"):
+    p = document.createElement("p")
+    p.className = "msg " + cls
+    p.innerText = text
+    feed_el.prepend(p)
+
+def pick(key, name=""):
+    opts = COMMENTS.get(key, [key])
+    return random.choice(opts).replace("{name}", name)
+
+def load_history(history_el):
+    try:
+        raw = localStorage.getItem("tennis_history")
+        if raw:
+            for item in json.loads(str(raw)):
+                _render_hist(history_el, item)
+    except: pass
+
+def _render_hist(history_el, data):
+    div = document.createElement("div");  div.className = "history-item"
+    s1  = document.createElement("span"); s1.className  = "winner-name"; s1.innerText = data["winner"]
+    s2  = document.createElement("span"); s2.className  = "score-summary"; s2.innerText = data["score"]
+    div.append(s1); div.append(s2)
+    history_el.prepend(div)
+
+def save_history(history_el, winner, score):
+    try:
+        raw  = localStorage.getItem("tennis_history")
+        data = json.loads(str(raw)) if raw else []
+        entry = {"winner": winner, "score": score}
+        data.append(entry)
+        if len(data) > 10: data.pop(0)
+        localStorage.setItem("tennis_history", json.dumps(data))
+        _render_hist(history_el, entry)
+    except: pass
+
+# ── Match loop ────────────────────────────────────────────
+match = None
+
+async def start_match():
+    global match
+
+    p1_n = str(document.getElementById("p1-name").value)
+    p2_n = str(document.getElementById("p2-name").value)
+    p1_s = {
+        "power":   int(str(document.getElementById("p1-power").value)),
+        "agility": int(str(document.getElementById("p1-agility").value)),
+        "stamina": int(str(document.getElementById("p1-stamina").value)),
+    }
+    p2_s = {
+        "power":   int(str(document.getElementById("p2-power").value)),
+        "agility": int(str(document.getElementById("p2-agility").value)),
+        "stamina": int(str(document.getElementById("p2-stamina").value)),
+    }
+
+    document.getElementById("p1-display").innerText = p1_n
+    document.getElementById("p2-display").innerText = p2_n
+
+    feed     = document.getElementById("commentary-feed")
+    hist     = document.getElementById("match-history")
+    ball_el  = document.getElementById("ball")
+    event_el = document.getElementById("special-event")
+
+    match = TennisMatch(p1_n, p2_n, p1_s, p2_s)
+    commentary(feed, f"⚡ Battle: {p1_n} vs {p2_n}", "success")
+
+    for eid in ["p1-score","p2-score","p1-games","p2-games"]:
+        document.getElementById(eid).innerText = "0"
+    document.getElementById("p1-sets").innerText = "0 Sets"
+    document.getElementById("p2-sets").innerText = "0 Sets"
+
+    while not match.winner:
+        point = match.simulate_point()
+        speed = int(str(document.getElementById("match-speed").value))
+        t = (speed / 1000) * 0.5
+
+        for hit in point["rally"]:
+            hitter_name = str(hit["hitter"])
+            to_side = 2 if hitter_name == match.p1.name else 1
+            # Move ball
+            ball_el.style.transition = f"left {t}s linear, top {t}s linear"
+            top_pct = random.randint(20, 80)
+            if to_side == 1:
+                ball_el.style.left = "40px"
+                document.getElementById("racket-1").style.top = f"{top_pct}%"
+            else:
+                ball_el.style.left = "calc(100% - 40px)"
+                document.getElementById("racket-2").style.top = f"{top_pct}%"
+            ball_el.style.top = f"{top_pct}%"
+            window._pyo_animateBall(ball_el, t * 1000)
+            await asyncio.sleep(t)
+
+        st = match.status()
+        document.getElementById("p1-score").innerText = st["p1_score"]
+        document.getElementById("p2-score").innerText = st["p2_score"]
+        document.getElementById("p1-games").innerText = st["p1_games"]
+        document.getElementById("p2-games").innerText = st["p2_games"]
+        document.getElementById("p1-sets").innerText  = st["p1_sets"] + " Sets"
+        document.getElementById("p2-sets").innerText  = st["p2_sets"] + " Sets"
+
+        result = str(point["result"])
+        hitter = str(point["last_hitter"])
+        if result == "winner":
+            commentary(feed, pick("winner", hitter), "success")
+        elif result == "error":
+            commentary(feed, pick("error", hitter), "info")
+
+        ev = st["special_event"]
+        if ev:
+            event_el.innerText = str(ev)
+            event_el.classList.add("active")
+            commentary(feed, pick(str(ev)), "winner")
+        else:
+            event_el.classList.remove("active")
+
+        if st["p1_serving"]:
+            document.getElementById("p1-serving").classList.add("active")
+            document.getElementById("p2-serving").classList.remove("active")
+        else:
+            document.getElementById("p2-serving").classList.add("active")
+            document.getElementById("p1-serving").classList.remove("active")
+
+        await asyncio.sleep(speed / 1000)
+
+    commentary(feed, f"🏆 {match.winner.name} wins the match!", "winner")
+    save_history(hist, match.winner.name, f"{match.p1.sets}-{match.p2.sets}")
+
+# ── Slider live readout ────────────────────────────────────
+def _update_val(e):
+    eid = str(e.target.id)
+    val = str(e.target.value)
+    el  = document.getElementById(eid + "-val")
+    if el: el.innerText = val
+
+_slider_proxy = create_proxy(_update_val)
+sliders = document.querySelectorAll('input[type="range"]')
+for i in range(int(sliders.length)):
+    s = sliders[i]
+    sid = str(s.id)
+    if "-power" in sid or "-agility" in sid or "-stamina" in sid:
+        s.addEventListener("input", _slider_proxy)
+
+# ── Load history
+load_history(document.getElementById("match-history"))
+`;
+
+    // ─── Boot Pyodide ──────────────────────────────────────────────────────────
+    async function boot() {
+        const msg = document.getElementById('loader-msg');
+        const sub = document.getElementById('loader-sub');
+
+        msg.textContent = 'Downloading Python Runtime...';
+
+        // Dynamically load Pyodide script
+        await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js';
+            s.onload  = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+
+        msg.textContent = 'Starting Python...';
+        sub.textContent = 'Initializing Pyodide runtime';
+
+        const pyodide = await loadPyodide({
+            indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/'
+        });
+
+        msg.textContent = 'Loading engine...';
+        sub.textContent = 'Running tennis engine';
+
+        await pyodide.runPythonAsync(PYTHON_CODE);
+
+        // Wire up start button
+        const btn = document.getElementById('start-btn');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-icon">⚡</span> START BATTLE';
+        btn.addEventListener('click', async () => {
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="btn-icon">🎾</span> MATCH IN PROGRESS...';
+            try {
+                await pyodide.runPythonAsync('await start_match()');
+            } catch(err) {
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="btn-icon">⚡</span> START BATTLE';
+            }
+        });
+
+        // Hide loader
+        document.getElementById('loader').classList.add('hidden');
+    }
+
+    boot().catch(err => {
+        document.getElementById('loader-msg').textContent = '❌ Error: ' + err.message;
+        document.getElementById('loader-sub').textContent = 'Check console for details';
+        console.error(err);
+    });
+    </script>
 </body>
 </html>
